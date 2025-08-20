@@ -1,0 +1,21 @@
+name: StreamLink
+version: '1.0'
+main: com.taffy.streamlink.streamlink
+api-version: '1.21'
+commands:
+  streamlink:
+    description: Main command for StreamLink functionality
+    usage: |
+      /streamlink - Show help
+      /streamlink link - Link your Twitch account
+      /streamlink check - Check your link status
+    aliases: [sl]
+permissions:
+  streamlink.use:
+    description: Allows using StreamLink commands
+    default: true
+  streamlink.admin:
+    description: Allows admin StreamLink functions
+    default: op
+resources:
+  - config.yml

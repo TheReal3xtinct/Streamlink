@@ -1,0 +1,47 @@
+config-version: 2
+debug-mode: false
+
+twitch:
+  client-id: "TWITCH_CLIENT_ID"
+  client-secret: "TWITCH_CLIENT_SECRET"
+
+live-status:
+  check-interval: 1800  # 30 minutes in seconds
+  broadcast-live: true
+  broadcast-offline: true
+  live-prefix: "&c[LIVE] &r"
+
+  # Announcement templates with proper formatting
+  announcements:
+    live: "&6🎥 &b{player} &ais now LIVE on Twitch! &7[{viewers} viewers]"
+    offline: "&7📴 &b{player} &chas gone offline."
+
+# Permission settings (mostly for reference)
+permissions:
+  luckperms:
+    partner-group: "twitch-partner"
+    affiliate-group: "twitch-affiliate"
+    viewer-group: "twitch-viewer"
+    live-group: "twitch-live"
+
+  # Bukkit permissions (if no LuckPerms)
+  bukkit:
+    partner-permissions:
+      - "streamlink.partner"
+      - "streamlink.emotes"
+      - "streamlink.vip"
+      - "essentials.fly"
+      - "essentials.teleport"
+      - "streamlink.colorchat"
+    affiliate-permissions:
+      - "streamlink.affiliate"
+      - "streamlink.emotes"
+      - "essentials.afk"
+      - "streamlink.colorchat"
+    viewer-permissions:
+      - "streamlink.viewer"
+      - "streamlink.basic"
+
+metrics:
+  report-interval: 3600  # 1 hour in seconds
+  auto-reset: true
