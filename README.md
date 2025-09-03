@@ -13,7 +13,7 @@ A Minecraft plugin that links your Twitch account to in-game accounts, syncs Str
 ---
 
 ## 📥 Installation
-1. Download the latest JAR from [Releases](https://github.com/YourUsername/StreamLink/releases).
+1. Download the latest JAR from [Releases](https://github.com/TheReal3xtinct/Streamlink/releases).
 2. Drop `StreamLink-v2.0.0.jar` into your `plugins/` folder.
 3. Start the server to generate `config.yml`.
 4. Configure Streamlabs OAuth and Twitch settings (see below).
