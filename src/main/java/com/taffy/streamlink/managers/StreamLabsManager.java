@@ -47,11 +47,16 @@ public class StreamLabsManager extends ManagerBase {
 
     @Override
     public void initialize() {
-        // load tokens from config.yml
         this.tokenManager = new TokenManager(plugin, plugin.getConfig(), plugin::saveConfig);
 
-        // kick off polling
-        startLoyaltyPointsPolling();
+        final String source = plugin.getConfig().getString("loyalty.source", "api").trim().toLowerCase();
+        final boolean pollingEnabled = plugin.getConfig().getBoolean("streamlabs.polling-enabled", true);
+
+        if ("api".equals(source) && pollingEnabled) {
+            startLoyaltyPointsPolling();
+        } else {
+            log.info("StreamLabs polling disabled (loyalty.source=" + source + ", polling-enabled=" + pollingEnabled + ")");
+        }
     }
 
     @Override
@@ -114,6 +119,27 @@ public class StreamLabsManager extends ManagerBase {
         );
     }
 
+    private void persistLoyalty(UUID playerId, int newPoints, long newMinutes) {
+        boolean preferStored = plugin.getConfig().getBoolean("streamlabs.prefer-stored", true);
+
+        var dm = plugin.getDataManager();
+        var pd = dm.getPlayerData(playerId);
+
+        int curPoints  = (pd != null) ? pd.getLoyaltyPoints()  : 0;
+        long curMins   = (pd != null) ? pd.getWatchMinutes()   : 0L;
+
+        int pointsToWrite  = preferStored ? Math.max(curPoints,  newPoints)  : newPoints;
+        long minutesToWrite = preferStored ? Math.max(curMins,   newMinutes) : newMinutes;
+
+        // Save once
+        dm.setLoyaltyPoints(playerId, pointsToWrite);
+        dm.setWatchMinutes(playerId, minutesToWrite);
+
+        // Keep in-memory cache in sync and apply tiers based on *effective* points
+        playerLoyaltyPoints.put(playerId, pointsToWrite);
+        applyTierIfChanged(playerId, pointsToWrite);
+    }
+
     /**
      * Background poller path:
      * - parses points (minutes may be missing/incorrect here)
@@ -145,6 +171,7 @@ public class StreamLabsManager extends ManagerBase {
                     HttpResponse.BodyHandlers.ofString()
             );
 
+            // On 401, try one refresh and retry
             if (resp.statusCode() == 401 && tokenManager.hasRefreshToken() && tokenManager.refreshIfNeeded()) {
                 resp = http.send(
                         HttpRequest.newBuilder()
@@ -165,25 +192,35 @@ public class StreamLabsManager extends ManagerBase {
                 return;
             }
 
+            // ---- Parse response ----
             JsonObject root = JsonParser.parseString(resp.body()).getAsJsonObject();
-            int points = 0;
+            int  points  = 0;
+            long minutes = 0L;
 
             if (root.has("points") && root.get("points").isJsonObject()) {
-                var wrapper = root.getAsJsonObject("points");
+                JsonObject wrapper = root.getAsJsonObject("points");
                 if (wrapper.has("data") && wrapper.get("data").isJsonArray() && wrapper.getAsJsonArray("data").size() > 0) {
-                    var row = wrapper.getAsJsonArray("data").get(0).getAsJsonObject();
-                    if (row.has("points")) points = row.get("points").getAsInt();
+                    JsonObject row = wrapper.getAsJsonArray("data").get(0).getAsJsonObject();
+                    if (row.has("points"))        points  = row.get("points").getAsInt();
+                    if (row.has("time_watched"))  minutes = row.get("time_watched").getAsLong(); // minutes
                 }
             } else if (root.has("data") && root.get("data").isJsonObject()) {
-                var data = root.getAsJsonObject("data");
-                if (data.has("points")) points = data.get("points").getAsInt();
+                JsonObject data = root.getAsJsonObject("data");
+                if (data.has("points"))        points  = data.get("points").getAsInt();
+                if (data.has("time_watched"))  minutes = data.get("time_watched").getAsLong();
             }
 
-            final int finalPoints = points;
+            final int  finalPoints  = points;
+            final long finalMinutes = minutes;
+
+            // Do state updates on main thread; persistLoyalty should respect streamlabs.prefer-stored
             Bukkit.getScheduler().runTask(plugin, () -> {
-                playerLoyaltyPoints.put(playerId, finalPoints);
-                plugin.getDataManager().setLoyaltyPoints(playerId, finalPoints);
-                applyTierIfChanged(playerId, finalPoints);
+                persistLoyalty(playerId, finalPoints, finalMinutes);
+                if (log.isDebugMode()) {
+                    log.debug("SL points viewer=" + viewerLoginLower +
+                            " -> new=" + finalPoints + " (" + finalMinutes + " min)" +
+                            " preferStored=" + plugin.getConfig().getBoolean("streamlabs.prefer-stored", true));
+                }
             });
 
             if (log.isDebugMode()) {
@@ -294,16 +331,17 @@ public class StreamLabsManager extends ManagerBase {
                 final long finalMinutes = minutes;
 
                 Bukkit.getScheduler().runTask(plugin, () -> {
-                    playerLoyaltyPoints.put(playerId, finalPoints);
-                    plugin.getDataManager().setLoyaltyPoints(playerId, finalPoints);
-                    if (finalMinutes > 0) {
-                        plugin.getDataManager().setWatchMinutes(playerId, finalMinutes);
-                    }
-                    applyTierIfChanged(playerId, finalPoints);
-                    player.sendMessage("§6§lStreamLabs §7→ §ePoints: §a" + finalPoints +
-                            " §7| §eWatch time: §a" + String.format("%.1f",
-                            (finalMinutes > 0 ? finalMinutes : plugin.getDataManager()
-                                    .getPlayerData(playerId).getWatchMinutes()) / 60.0) + "h");
+                    // Persist honoring prefer-stored
+                    persistLoyalty(playerId, finalPoints, finalMinutes);
+
+                    // Read back what actually “won” and show that to the player
+                    var pd = plugin.getDataManager().getPlayerData(playerId);
+                    int effectivePoints = (pd != null) ? pd.getLoyaltyPoints() : finalPoints;
+                    long effectiveMinutes = (pd != null) ? pd.getWatchMinutes() : finalMinutes;
+
+                    player.sendMessage("§6§lStreamLabs §7→ §ePoints: §a" + effectivePoints +
+                            " §7| §eWatch time: §a" + String.format("%.1f", effectiveMinutes / 60.0) + "h" +
+                            (plugin.getConfig().getBoolean("streamlabs.prefer-stored", true) ? " §7(Prefer stored)" : ""));
                 });
 
                 if (log.isDebugMode()) {

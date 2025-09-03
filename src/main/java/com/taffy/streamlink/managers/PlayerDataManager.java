@@ -24,6 +24,28 @@ public class PlayerDataManager extends ManagerBase {
         super(plugin);
         setupPlayerData();
         loadAllPlayerData();
+        scheduleCsvAutoSyncIfEnabled();
+    }
+
+    private void scheduleCsvAutoSyncIfEnabled() {
+        String source = plugin.getConfig().getString("loyalty.source", "api").trim().toLowerCase();
+        if (!"csv".equals(source)) return;
+
+        boolean auto = plugin.getConfig().getBoolean("loyalty.csv.auto-sync", false);
+        if (!auto) return;
+
+        int mins = Math.max(1, plugin.getConfig().getInt("loyalty.csv.interval-mins", 60));
+        File csv = new File(plugin.getDataFolder(), plugin.getConfig().getString("loyalty.csv.path", "loyalty.csv"));
+
+        Bukkit.getScheduler().runTaskTimerAsynchronously(
+                plugin,
+                () -> {
+                    String summary = importLoyaltyCsv(csv, false);
+                    if (log.isDebugMode()) log.debug("[Auto CSV Sync] " + summary);
+                },
+                20L * 60L * mins, // initial delay
+                20L * 60L * mins  // repeat
+        );
     }
 
     private void setupPlayerData() {
