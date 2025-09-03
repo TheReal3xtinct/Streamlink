@@ -1,10 +1,6 @@
 # StreamLink
 A Minecraft plugin that links your Twitch account to in-game accounts, syncs Streamlabs Cloudbot loyalty points, and enables server perks based on loyalty tiers.  
 
-**Version:** v2.0.0  
-**Platform:** Bukkit / Spigot / Paper  
-**Java:** 17+  
-
 ---
 
 ## ✨ Features
