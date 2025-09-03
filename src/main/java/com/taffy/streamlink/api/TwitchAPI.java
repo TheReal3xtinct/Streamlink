@@ -112,21 +112,15 @@ public class TwitchAPI extends ManagerBase {
         return accessToken + "|" + refreshToken;
     }
 
-    private String getSecureSecret(String envVar) {
-        // First try to get from config
-        String secret = plugin.getConfig().getString("twitch.client-secret");
-
-        // If config value is missing or placeholder, check environment as fallback
+    private String getSecureSecret(String configKey) {
+        String secret = plugin.getConfig().getString(configKey);
         if (secret == null || secret.trim().isEmpty() || secret.equals("your_twitch_client_secret_here")) {
-            secret = System.getenv(envVar);
+            secret = System.getenv("TWITCH_CLIENT_SECRET"); // <-- real env var
             if (secret == null || secret.trim().isEmpty()) {
-                log.severe("FATAL: Twitch Client Secret not configured!");
-                log.severe("Please set 'twitch.client-secret' in config.yml");
+                log.severe("FATAL: Twitch Client Secret not configured! Set twitch.client-secret in config.yml or TWITCH_CLIENT_SECRET env.");
                 return null;
             }
-            return secret;
         }
-
         return secret;
     }
 

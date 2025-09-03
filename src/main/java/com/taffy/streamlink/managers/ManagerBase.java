@@ -12,4 +12,14 @@ public class ManagerBase {
         this.log = plugin.getLogManager();
         this.metrics = plugin.getMetricsManager();
     }
+
+    public void initialize() {
+    }
+
+    public void shutdown() {
+
+    }
+
+    public void connect() {
+    }
 }

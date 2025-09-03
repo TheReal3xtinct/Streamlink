@@ -2,7 +2,9 @@ package com.taffy.streamlink;
 
 import com.taffy.streamlink.api.TwitchAPI;
 import com.taffy.streamlink.commands.StreamLinkCommand;
+import com.taffy.streamlink.commands.StreamLinkTab;
 import com.taffy.streamlink.exceptions.ConfigException;
+import com.taffy.streamlink.listeners.StoredSummaryListener;
 import com.taffy.streamlink.listeners.StreamLinkListener;
 import com.taffy.streamlink.managers.*;
 import com.taffy.streamlink.utils.DeviceFlowTask;
@@ -11,6 +13,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.io.File;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.UUID;
 
@@ -22,17 +25,21 @@ public final class streamlink extends JavaPlugin implements Listener {
     private MetricsManager metricsManager;
     private LogManager logManager;
     private ConfigManager configManager;
+    private StreamLabsManager streamLabsManager;
     private final ConcurrentHashMap<UUID, DeviceFlowTask> activeTasks = new ConcurrentHashMap<>();
 
     @Override
     public void onEnable() {
-        // Initialize core logging first
+        // 1) Copy default config from jar if missing
+        saveDefaultConfig(); // requires config.yml packaged in /resources
+
+
+        // Optional: if you want to ensure defaults get written for missing keys
+        getConfig().options().copyDefaults(true);
+        saveConfig();
+
         this.logManager = new LogManager(this);
 
-        // Config handling - save default config if it doesn't exist
-        saveDefaultConfig();
-
-        // Initialize config manager next
         try {
             this.configManager = new ConfigManager(this);
             configManager.validateAndSetup();
@@ -67,10 +74,14 @@ public final class streamlink extends JavaPlugin implements Listener {
         this.twitchAPI = new TwitchAPI(this);
         this.permissionManager = new UniversalPermissionManager(this);
         this.liveStatusManager = new LiveStatusManager(this);
+        this.streamLabsManager = new StreamLabsManager(this);
+        this.streamLabsManager.initialize();
 
         // Register command and events
         getCommand("streamlink").setExecutor(new StreamLinkCommand(this));
         getServer().getPluginManager().registerEvents(new StreamLinkListener(this), this);
+        getServer().getPluginManager().registerEvents(new StoredSummaryListener(this), this);
+        getCommand("streamlink").setTabCompleter(new StreamLinkTab());
 
         // Schedule metrics reporting if enabled
         if (getConfig().getBoolean("metrics.auto-reset", true)) {
@@ -88,6 +99,26 @@ public final class streamlink extends JavaPlugin implements Listener {
         } else {
             logManager.info("Twitch integration is configured and ready!");
         }
+
+        scheduleCsvAutoSync();
+    }
+
+    private void scheduleCsvAutoSync() {
+        boolean auto = getConfig().getBoolean("loyalty.csv.auto-sync", false);
+        int mins = getConfig().getInt("loyalty.csv.interval-mins", 60);
+        if (!"csv".equalsIgnoreCase(getConfig().getString("loyalty.source", "csv")) || !auto || mins <= 0) {
+            return;
+        }
+
+        File file = new File(getDataFolder(), getConfig().getString("loyalty.csv.path", "loyalty.csv"));
+        Bukkit.getScheduler().runTaskTimerAsynchronously(this, () -> {
+            try {
+                String summary = getDataManager().importLoyaltyCsv(file, /*dryRun=*/false);
+                if (getLogManager().isDebugMode()) getLogManager().debug("[AutoSync] " + summary);
+            } catch (Exception e) {
+                getLogManager().warn("[AutoSync] CSV sync failed: " + e.getMessage(), e);
+            }
+        }, 0L, mins * 60L * 20L);
     }
 
     @Override
@@ -124,7 +155,7 @@ public final class streamlink extends JavaPlugin implements Listener {
 
     // Getters with null checks
     public LiveStatusManager getLiveStatusManager() {
-        return liveStatusManager != null ? liveStatusManager : null;
+        return liveStatusManager;
     }
 
     public TwitchAPI getTwitchAPI() {
@@ -155,4 +186,7 @@ public final class streamlink extends JavaPlugin implements Listener {
         return configManager != null ? configManager : null;
     }
 
+    public StreamLabsManager getStreamLabsManager() {
+        return streamLabsManager;
+    }
 }

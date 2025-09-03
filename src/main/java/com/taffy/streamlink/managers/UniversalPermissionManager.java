@@ -19,7 +19,8 @@ public class UniversalPermissionManager extends ManagerBase {
 
     public UniversalPermissionManager(streamlink plugin) {
         super(plugin);
-        this.luckPerms = Bukkit.getServicesManager().getRegistration(LuckPerms.class).getProvider();
+        var reg = Bukkit.getServicesManager().getRegistration(LuckPerms.class);
+        this.luckPerms = (reg != null) ? reg.getProvider() : null;
         detectPermissionPlugins();
     }
 
@@ -251,6 +252,11 @@ public class UniversalPermissionManager extends ManagerBase {
         };
     }
 
+    private java.util.List<String> lpTierGroups(int tier) {
+        var base = "permissions.luckperms.tiers.tier" + tier;
+        return plugin.getConfig().getStringList(base);
+    }
+
     public void migrateOldGroups(Player player) {
         if (!useLuckPerms) return;
 
@@ -296,6 +302,42 @@ public class UniversalPermissionManager extends ManagerBase {
         });
     }
 
+    public void applyTier1Permissions(Player player) {
+        if (useLuckPerms) {
+            for (String g : lpTierGroups(1)) addSecondaryLuckPermsGroup(player, g);
+        } else {
+            addBukkitPermissions(player, new String[]{"streamlink.loyalty.tier1","streamlink.emotes.basic","streamlink.color.basic"});
+        }
+        player.sendMessage("§a§l🎉 You've reached Loyalty Tier 1!");
+    }
+
+    public void applyTier2Permissions(Player player) {
+        if (useLuckPerms) {
+            for (String g : lpTierGroups(1)) addSecondaryLuckPermsGroup(player, g);
+        } else {
+            addBukkitPermissions(player, new String[]{"streamlink.loyalty.tier1","streamlink.emotes.basic","streamlink.color.basic"});
+        }
+        player.sendMessage("§a§l🎉 You've reached Loyalty Tier 1!");
+    }
+
+    public void applyTier3Permissions(Player player) {
+        if (useLuckPerms) {
+            for (String g : lpTierGroups(1)) addSecondaryLuckPermsGroup(player, g);
+        } else {
+            addBukkitPermissions(player, new String[]{"streamlink.loyalty.tier1","streamlink.emotes.basic","streamlink.color.basic"});
+        }
+        player.sendMessage("§a§l🎉 You've reached Loyalty Tier 1!");
+    }
+
+    public void applyTier4Permissions(Player player) {
+        if (useLuckPerms) {
+            for (String g : lpTierGroups(1)) addSecondaryLuckPermsGroup(player, g);
+        } else {
+            addBukkitPermissions(player, new String[]{"streamlink.loyalty.tier1","streamlink.emotes.basic","streamlink.color.basic"});
+        }
+        player.sendMessage("§a§l🎉 You've reached Loyalty Tier 1!");
+    }
+
     public boolean isUsingLuckPerms() {
         return useLuckPerms;
     }
@@ -332,5 +374,35 @@ public class UniversalPermissionManager extends ManagerBase {
                     "streamlink.teleport"
             });
         }
+    }
+    public void removeTierPermissions(Player player) {
+        if (useLuckPerms) {
+            removeSecondaryLuckPermsGroup(player, "streamlabs-tier1");
+            removeSecondaryLuckPermsGroup(player, "streamlabs-tier2");
+            removeSecondaryLuckPermsGroup(player, "streamlabs-tier3");
+            removeSecondaryLuckPermsGroup(player, "streamlabs-tier4");
+        } else {
+            removeSpecificBukkitPermissions(player, new String[]{
+                    "streamlink.loyalty.tier1",
+                    "streamlink.loyalty.tier2",
+                    "streamlink.loyalty.tier3",
+                    "streamlink.loyalty.tier4",
+                    "streamlink.emotes.basic",
+                    "streamlink.emotes.advanced",
+                    "streamlink.emotes.all",
+                    "streamlink.emotes.unlimited",
+                    "streamlink.color.basic",
+                    "streamlink.color.rainbow",
+                    "streamlink.color.gradient",
+                    "streamlink.color.animated",
+                    "streamlink.vip.chat",
+                    "streamlink.vip.all",
+                    "streamlink.vip.ultimate",
+                    "streamlink.fly.basic",
+                    "streamlink.fly.creative",
+                    "streamlink.teleport"
+            });
+        }
+        log.info("Removed all loyalty tier permissions from " + player.getName());
     }
 }

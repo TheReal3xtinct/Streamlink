@@ -54,13 +54,6 @@ public class ConfigManager extends ManagerBase {
         String clientId = getTwitchClientId();
         String clientSecret = getTwitchClientSecret();
 
-        if (clientId.equals("your_twitch_client_id_here")) {
-            throw new ConfigException("Please update '" + ConfigKeys.TWITCH_CLIENT_ID + "' in config.yml with your actual Twitch Client ID");
-        }
-
-        if (clientSecret.equals("your_twitch_client_secret_here")) {
-            throw new ConfigException("Please update '" + ConfigKeys.TWITCH_CLIENT_SECRET + "' in config.yml with your actual Twitch Client Secret");
-        }
     }
 
     // Type-safe getter methods
@@ -169,5 +162,19 @@ public class ConfigManager extends ManagerBase {
         if (!config.contains(ConfigKeys.METRICS_AUTO_RESET)) {
             config.set(ConfigKeys.METRICS_AUTO_RESET, true);
         }
+    }
+
+    private void validateStreamlabsConfig() {
+        FileConfiguration config = plugin.getConfig();
+
+        if (!config.contains("streamlabs.channel"))        config.set("streamlabs.channel", "YOUR_STREAMER_TWITCH_LOGIN");
+        if (!config.contains("streamlabs.access-token"))   config.set("streamlabs.access-token", "");
+        if (!config.contains("streamlabs.refresh-token"))  config.set("streamlabs.refresh-token", "");
+        if (!config.contains("streamlabs.oauth-helper"))   config.set("streamlabs.oauth-helper", "http://localhost:3000");
+
+        if (!config.contains("streamlabs.loyalty-tiers.tier1")) config.set("streamlabs.loyalty-tiers.tier1", 100);
+        if (!config.contains("streamlabs.loyalty-tiers.tier2")) config.set("streamlabs.loyalty-tiers.tier2", 1000);
+        if (!config.contains("streamlabs.loyalty-tiers.tier3")) config.set("streamlabs.loyalty-tiers.tier3", 5000);
+        if (!config.contains("streamlabs.loyalty-tiers.tier4")) config.set("streamlabs.loyalty-tiers.tier4", 10000);
     }
 }

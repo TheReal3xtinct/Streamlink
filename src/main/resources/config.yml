@@ -1,22 +1,63 @@
 config-version: 2
+
+# Global debug toggle read by your LogManager
 debug-mode: false
 
 twitch:
   client-id: "TWITCH_CLIENT_ID"
   client-secret: "TWITCH_CLIENT_SECRET"
 
+streamlabs:
+  channel: "YOUR_STREAMER_TWITCH_LOGIN" # IN LOWER CASE
+  access-token: "INITIAL_SHORT_LIVED_ACCESS_TOKEN"
+  refresh-token: "LONG_LIVED_REFRESH_TOKEN"
+  oauth-helper: "https://streamlink.3xtaffy.workers.dev" # DO NOT CHANGE UNLESS YOU KNOW WHAT YOU ARE DOING
+
+  # If you want to use the API live:
+  #   polling-enabled: true  (loyalty.source will be "api")
+  # If you want CSV to be authoritative:
+  #   polling-enabled: false (loyalty.source will be "csv")
+  polling-enabled: true
+
+  # When API values are lower than stored, don't overwrite stored values
+  prefer-stored: true
+
+  loyalty-tiers:
+    tier1: 100
+    tier2: 1000
+    tier3: 5000
+    tier4: 10000
+
+# ---- Loyalty data source + CSV options ----
+loyalty:
+  # Master switch for where points come from:
+  #   "api" = use Streamlabs API (honors streamlabs.polling-enabled)
+  #   "csv" = use CSV file as the source of truth (disables API polling & /points uses stored values)
+  source: "csv"  # set to "api" or "csv"
+
+  csv:
+    # Automatically re-import the CSV on a schedule (only used when source=csv)
+    auto-sync: false
+    interval-mins: 60
+    # CSV location (relative to plugins/StreamLink/)
+    path: "loyalty.csv"
+
+  # Column name aliases we’ll accept for watch time in minutes.
+  # First match wins (case-insensitive).
+  csv_watch_minutes_headers: ["minutes", "time", "watchtimeminutes", "watch_time_minutes", "time_watched"]
+
+# ---- Live status announcements ----
 live-status:
   check-interval: 1800  # 30 minutes in seconds
   broadcast-live: true
   broadcast-offline: true
   live-prefix: "&c[LIVE] &r"
 
-  # Announcement templates with proper formatting
   announcements:
     live: "&6🎥 &b{player} &ais now LIVE on Twitch! &7[{viewers} viewers]"
     offline: "&7📴 &b{player} &chas gone offline."
 
-# Permission settings (mostly for reference)
+# ---- Permission settings ----
 permissions:
   luckperms:
     partner-group: "twitch-partner"
@@ -24,14 +65,19 @@ permissions:
     viewer-group: "twitch-viewer"
     live-group: "twitch-live"
 
+    # Optional: LuckPerms secondary groups to add per loyalty tier
+    tiers:
+      tier1: ["streamlabs-tier1"]
+      tier2: ["streamlabs-tier2"]
+      tier3: ["streamlabs-tier3"]
+      tier4: ["streamlabs-tier4"]
+
   # Bukkit permissions (if no LuckPerms)
   bukkit:
     partner-permissions:
       - "streamlink.partner"
       - "streamlink.emotes"
       - "streamlink.vip"
-      - "essentials.fly"
-      - "essentials.teleport"
       - "streamlink.colorchat"
     affiliate-permissions:
       - "streamlink.affiliate"

@@ -10,12 +10,12 @@ public class PlayerData {
     private String refreshToken;
     private boolean isLive;
     private int loyaltyPoints;
+    private long watchMinutes;
 
     public PlayerData(UUID playerId) {
         this.playerId = playerId;
     }
 
-    // Getters and setters
     public UUID getPlayerId() { return playerId; }
     public String getTwitchId() { return twitchId; }
     public void setTwitchId(String twitchId) { this.twitchId = twitchId; }
@@ -29,8 +29,11 @@ public class PlayerData {
     public void setLive(boolean live) { isLive = live; }
     public int getLoyaltyPoints() { return loyaltyPoints; }
     public void setLoyaltyPoints(int loyaltyPoints) { this.loyaltyPoints = loyaltyPoints; }
+    public long getWatchMinutes() { return watchMinutes; }
+    public void setWatchMinutes(long minutes) { this.watchMinutes = minutes; }
 
     public boolean isLinked() {
-        return twitchId != null && accessToken != null;
+        return twitchId != null && !twitchId.isEmpty()
+                && accessToken != null && !accessToken.isEmpty();
     }
 }
