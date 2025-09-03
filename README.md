@@ -58,6 +58,20 @@ Username, Points, Minutes
 
 ---
 
+## Sreamlabs Access Token and Refresh Token
+
+- Visit this [link](https://streamlink.3xtaffy.workers.dev)
+
+- Click on Authenticate with Streamlabs (HTML)
+  
+- Log in to your Streamlabs (if you haven't)
+  
+- Click on Authorize
+  
+- Copy the access_token and refresh_token into the config.yml
+
+---
+
 ## ⚙️ Configuration
 `config.yml`:
 
@@ -66,7 +80,7 @@ streamlabs:
   channel: "your_twitch_username"
   access-token: ""
   refresh-token: ""
-  oauth-helper: "https://streamlink.3xtaffy.workers.dev" # Cloudflare Worker endpoint
+  oauth-helper: "https://streamlink.3xtaffy.workers.dev" # DO NOT CHANGE UNLESS YOU KNOW WHAT YOU ARE DOING
   polling:
     enabled: true
     interval_seconds: 30
