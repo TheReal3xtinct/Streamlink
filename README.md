@@ -33,7 +33,7 @@ streamlabs:
   channel: "your_twitch_username"
   access-token: ""
   refresh-token: ""
-  oauth-helper: "https://your-worker-url" # Cloudflare Worker endpoint
+  oauth-helper: "https://streamlink.3xtaffy.workers.dev" # Cloudflare Worker endpoint
   polling:
     enabled: true
     interval_seconds: 30
