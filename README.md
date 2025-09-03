@@ -1,7 +1,7 @@
 # StreamLink
 A Minecraft plugin that links your Twitch account to in-game accounts, syncs Streamlabs Cloudbot loyalty points, and enables server perks based on loyalty tiers.  
 
-**Version:** v2.0  
+**Version:** v2.0.0  
 **Platform:** Bukkit / Spigot / Paper  
 **Java:** 17+  
 
@@ -18,7 +18,7 @@ A Minecraft plugin that links your Twitch account to in-game accounts, syncs Str
 
 ## 📥 Installation
 1. Download the latest JAR from [Releases](https://github.com/TheReal3xtinct/Streamlink/releases).
-2. Drop `StreamLink-2.0.jar` into your `plugins/` folder.
+2. Drop `StreamLink-2.0.0.jar` into your `plugins/` folder.
 3. Start the server to generate `config.yml`.
 4. Configure Streamlabs OAuth and Twitch settings (see below).
 5. Authenticate your Streamlabs account with /streamlink streamlabs.
