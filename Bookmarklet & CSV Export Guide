@@ -1,1 +1,50 @@
+📖 Guide: Exporting Streamlabs Cloudbot Loyalty Data (CSV)
 
+This plugin now supports syncing points and watch time directly from a CSV export of your Streamlabs Cloudbot loyalty data. Here’s how to do it step by step:
+
+1️⃣ Get Your Bookmarklet
+
+Paste this code into a new browser bookmark (name it “Streamlabs Loyalty Export”):
+
+javascript:(async()=>{const totalPages=100;let allUsers=[];for(let page=1;page<=totalPages;page++){const res=await fetch(`https://streamlabs.com/api/v5/cloudbot/loyalty?page=${page}`,{credentials:"include"});const json=await res.json();if(json?.data?.data){allUsers=allUsers.concat(json.data.data);console.log(`Fetched page ${page}, total so far: ${allUsers.length}`);}else{console.warn(`No data found on page ${page}`);}}const headers=["Username","Points","WatchTimeMinutes","UpdatedAt","CreatedAt"];const rows=allUsers.map(u=>[u.viewer.name,u.points,u.time,u.updated_at,u.created_at]);let csv=headers.join(",")+"\n"+rows.map(r=>r.join(",")).join("\n");const blob=new Blob([csv],{type:"text/csv"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download="loyalty.csv";a.click();URL.revokeObjectURL(url);console.log("✅ loyalty.csv downloaded with",allUsers.length,"users.");})();
+
+2️⃣ Export Data
+
+Log in to Streamlabs Dashboard
+.
+
+Go to Cloudbot → Loyalty → Users.
+
+Click your bookmarklet.
+
+Wait for all pages to load; loyalty.csv will automatically download.
+
+3️⃣ Place the CSV in Your Server
+
+Move loyalty.csv into your plugin’s data folder (where config.yml and playerdata.yml are).
+
+4️⃣ Sync with StreamLink
+
+Run the command:
+
+/streamlink sync
+
+
+Updates loyalty points and watch time for all linked players.
+
+Skips entries that aren’t linked.
+
+Supports a dry run for testing:
+
+/streamlink sync --dry
+
+5️⃣ Optional: Export Player Data
+
+To export all stored data:
+
+/streamlink export
+
+
+This creates export-loyalty.csv with all synced players.
+
+This makes it super clear how to grab data from Streamlabs and update your server’s records.
