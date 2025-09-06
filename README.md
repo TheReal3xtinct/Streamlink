@@ -49,8 +49,6 @@ javascript:(async()=>{const totalPages=100;let allUsers=[];for(let page=1;page<=
 
 - Move the loyalty.csv file into your plugin’s data folder, where config.yml and playerdata.yml are stored.
 
-- Run /streamlink sync --dry to preview changes.
-
 - Run /streamlink sync to import.
 
 - CSV headers supported:
